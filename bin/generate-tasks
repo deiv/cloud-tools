@@ -1,0 +1,89 @@
+#!/usr/bin/ruby
+#
+# Author: David Suárez <david.sephirot@gmail.com>
+# Date: Sat, 04 Jan 2014 15:01:40 +0100
+#
+
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
+require 'optparse'
+require 'cloud-tools'
+require 'cloud-tools/tasks'
+
+def die_on_set_defined()
+  if $setname != nil then
+    puts "error: you cant specify instance parameter [-tcp] using a predefined set [-s]"
+    exit -1
+  end
+end
+
+$setname=nil
+$type=nil
+$count=nil
+$price=nil
+
+CloudTools::Config.load
+
+options = OptionParser::new do |opts|
+  opts.banner = "Usage: ./reserve-ec2 -tcp"
+  opts.banner = "Usage: ./reserve-ec2 -s setname"
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("-t", "--type INSTANCE_TYPE", "Instance type") do |t|
+    die_on_set_defined
+    
+    if CloudTools::INSTANCE_TYPES.any? {|k, v| v == t}      
+      $type = t
+    else
+      puts "invalid instance type: #{t}"
+      exit 2
+    end
+  end
+  opts.on("-c", "--count COUNT", "Number of instances") do |c|
+    die_on_set_defined
+    $count = c
+  end
+  opts.on("-p", "--price PRICE", "Price of the instace") do |p|
+    die_on_set_defined
+    $price = p
+  end
+  opts.on("-s", "--set BUILD_SET", "Predefined set of build nodes") do |s|
+    $setname = s
+  end
+  opts.on("-l", "--list", "List of predefined sets") do 
+    puts "List of predefined sets of nodes:"
+    CloudTools::Config.sets.each_value { |s| puts CloudTools::pretty_print_set s }
+    exit
+  end
+end
+options.parse!(ARGV)
+
+instances = CloudTools::Config.sets[$setname] if $setname
+
+# exit if a set is requested but we can't get his definition in the config
+if not instances and $setname
+  puts "error: unknown set specified" 
+  exit 1
+end
+
+# if not set defined, we try to build a custom one from the commandline
+if not instances
+  if $type == nil || $count == nil || $price == nil then
+    puts "error: bad argument count, use -h for help"
+    exit 2
+  end
+end
+
+puts "generating tasks"
+
+tasksGen = CloudTools::TasksGenerator.new
+
+tasks = tasksGen.from_buildset(instances)
+#generate({
+#    :log_id => "iddd"
+#})
+
+#puts tasksGen.to_json(tasks)
+
+exit 0

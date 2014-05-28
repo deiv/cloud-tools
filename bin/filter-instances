@@ -1,0 +1,64 @@
+#!/usr/bin/ruby
+#
+# Author:: David Suárez <david.sephirot@gmail.com>
+# Date:: Thu, 26 Dec 2013 14:07:02 +0100 
+#
+# Filter instances based on some given user parameters and then print
+# information about them (user selected too).
+#
+
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
+require 'optparse'
+require 'cloud-tools'
+require 'cloud-tools/ec2'
+
+$type=nil
+$info=:privateip
+
+CloudTools::Config.load
+
+options = OptionParser::new do |opts|
+  opts.banner = "Usage: ./filter-instances -t m1.medium -w private-ip"
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("-t", "--type INSTANCE_TYPE", "Instance type") do |t|
+    if CloudTools::INSTANCE_TYPES.any? {|k, v| v == t}      
+      $type = t
+    else
+      puts "invalid instance type: #{t}"
+      exit 2
+    end
+  end
+  
+  opts.on("-w", "--write opt", "write info on stdout. Where opt: private-ip (def) | public-ip") do |t|
+    if t == "public-ip"
+      $info = :publicip
+    elsif t != "private-ip"
+      puts "error: invalid info argument"
+      exit 3
+    end
+  end
+end
+
+options.parse!(ARGV)
+
+ec2 = CloudTools::Ec2.new
+
+if $type == nil
+  puts "error: please give some filter arguments"
+  exit 4
+end
+
+instances = ec2.filter $type
+
+instances.each do |i|
+  if $info == :privateip 
+    puts i.private_ip_address
+  else
+    puts i.public_ip_address
+  end
+end
+
+exit 0
