@@ -54,7 +54,7 @@
       name: large
       nodes: !ruby/struct:Nodes
         instance: *xlarge
-        count: 12 
+        count: 15
       args: -m parallel #-l 1800 
 
   - !ruby/struct:MixedSet
@@ -104,8 +104,8 @@
       name: medium
       
       nodes: !ruby/struct:Nodes
-        instance: *medium
-        count: 60
+        instance: *mlarge
+        count: 30
 
       tasks:
         - *ref-binary
@@ -116,7 +116,7 @@
 
       nodes: !ruby/struct:Nodes
         instance: *xlarge
-        count: 10
+        count: 20
 
       tasks:
         - *ref-binary
