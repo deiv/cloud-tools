@@ -201,7 +201,7 @@ protected
   def estimated_times
     return @esttimes if @esttimes
 
-    times_file = File.join(File.dirname($config_dir), 'buildtime.list')
+    times_file = File.join($config_dir, 'buildtime.list')
     
     @esttimes = Hash[
       File::readlines(times_file)

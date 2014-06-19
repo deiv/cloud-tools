@@ -34,7 +34,7 @@ class Config
   end
 
   def self.load
-	config_file = File.join(File.dirname($config_dir), "instances.yml")
+	config_file = File.join($config_dir, "instances.yml")
 
 	unless File.exist?(config_file)
 	  puts "error: Unable to find the config file"
