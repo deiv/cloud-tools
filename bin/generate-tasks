@@ -24,30 +24,30 @@ $price=nil
 
 CloudTools::Config.load
 
+tasks_options = {}
+mixed_options = {}
+
 options = OptionParser::new do |opts|
-  opts.banner = "Usage: ./reserve-ec2 -tcp"
-  opts.banner = "Usage: ./reserve-ec2 -s setname"
+  opts.banner = "Usage: ./reserve-ec2 ( -tcp | -s setname )"
   opts.separator ""
   opts.separator "Options:"
 
-  opts.on("-t", "--type INSTANCE_TYPE", "Instance type") do |t|
-    die_on_set_defined
-    
-    if CloudTools::INSTANCE_TYPES.any? {|k, v| v == t}      
-      $type = t
-    else
-      puts "invalid instance type: #{t}"
-      exit 2
-    end
-  end
-  opts.on("-c", "--count COUNT", "Number of instances") do |c|
-    die_on_set_defined
-    $count = c
-  end
-  opts.on("-p", "--price PRICE", "Price of the instace") do |p|
-    die_on_set_defined
-    $price = p
-  end
+  opts.separator "  globals:"
+  opts.on("-m", "--mode MODE") { |m|
+    tasks_options[:modes] = [] unless tasks_options[:modes]
+    tasks_options[:modes] << m
+  }
+  opts.on("-i", "--id TEXT")         { |t| tasks_options[:log_id] = t }
+
+  opts.on("", "--no-arch-all")       { tasks_options[:noall] = true }
+  opts.on("-l", "--time-lower TIME") { |t| tasks_options[:time_lower] = t.to_i }
+  opts.on("-u", "--time-upper TIME") { |t| tasks_options[:time_upper] = t.to_i }
+  opts.on("-c", "--chroot CHROOT")   { |t| tasks_options[:chroot] = t }
+  opts.on("", "--include FILE")      { |t| tasks_options[:pkgs_include] = IO::read(t).split }
+  opts.on("", "--exclude FILE")      { |t| tasks_options[:pkgs_exclude] = IO::read(t).split }
+
+  opts.separator ""
+  opts.separator "  sets:"
   opts.on("-s", "--set BUILD_SET", "Predefined set of build nodes") do |s|
     $setname = s
   end
@@ -56,6 +56,20 @@ options = OptionParser::new do |opts|
     CloudTools::Config.sets.each_value { |s| puts CloudTools::pretty_print_set s }
     exit
   end
+
+  opts.separator ""
+  opts.separator "  mixed sets:"
+  opts.on("", "--mode_mix1 MODE") { |m|
+    mixed_options[:modes_mix1] = [] unless mixed_options[:modes_mix1]
+    mixed_options[:modes_mix1] << m
+  }
+  opts.on("", "--id_mix1 TEXT")         { |t| mixed_options[:log_id_mix1] = t }
+
+  opts.on("", "--mode_mix2 MODE") { |m|
+    mixed_options[:modes_mix2] = [] unless mixed_options[:modes_mix2]
+    mixed_options[:modes_mix2] << m
+  }
+  opts.on("", "--id_mix2 TEXT")         { |t| mixed_options[:log_id_mix2] = t }
 end
 options.parse!(ARGV)
 
@@ -69,7 +83,7 @@ end
 
 # if not set defined, we try to build a custom one from the commandline
 if not instances
-  if $type == nil || $count == nil || $price == nil then
+  if tasks_options.empty?
     puts "error: bad argument count, use -h for help"
     exit 2
   end
@@ -79,11 +93,11 @@ puts "generating tasks"
 
 tasksGen = CloudTools::TasksGenerator.new
 
-tasks = tasksGen.from_buildset(instances)
-#generate({
-#    :log_id => "iddd"
-#})
-
-#puts tasksGen.to_json(tasks)
+if instances
+  tasks = tasksGen.from_buildset(instances, tasks_options, mixed_options)
+else
+  tasks = tasksGen.generate(tasks_options)
+  tasksGen.write_json(tasks, "tasks.json")
+end
 
 exit 0

@@ -52,6 +52,9 @@ class TasksGenerator
     :modes => []
   }
 
+  #
+  # Generates the tasks json from options hash.
+  #
   def generate(options)
 
     options = @@defaults.merge(options)
@@ -97,26 +100,43 @@ class TasksGenerator
     return tasks
   end
 
-  def from_task(task, opts={})
+  #
+  # Generates the tasks json from a task struct.
+  #
+  def from_task(task, tasks_opts=nil, mixed_opts=nil)
+
+    tasks_opts = {} if not tasks_opts
+
     if task.is_a?(MixedSet)
       tasks = []
 
-      task.tasks.each { |t|
-        options = opts.merge(parse_options(t.args))
-        options = options.merge({ :log_id => t.name })
+      task.tasks.each_index do |idx|
+        options = {}
+        set_opts = parse_options(task.tasks[idx].args)
+
+        if mixed_opts
+          options = merge_mixed_option idx+1, set_opts, tasks_opts, mixed_opts
+        else
+          options = merge_options set_opts, tasks_opts
+        end
 
         tasks += generate(options)
-      }
+      end
 
       return tasks
 
     else
-      options = opts.merge(parse_options(task.args))
+      raise "can't handle mixed set options, the task is not a mixed set" if not mixed_opts.empty?
+
+      options = merge_options parse_options(task.args), tasks_opts
       return generate(options)
     end
   end
 
-  def from_buildset(set)
+  #
+  # Writes all the json tasks files need by a set.
+  #
+  def from_buildset(set, tasks_opts=nil, mixed_opts=nil)
     
     if set.is_a?(BalancedSet)
       thread = []
@@ -128,12 +148,14 @@ class TasksGenerator
           Thread::abort_on_exception = true
           
           if upper
-            options = { :time_upper => set.midpoint }
+            set_opts = { :time_upper => set.midpoint }
           else
-            options = { :time_lower => set.midpoint }
+            set_opts = { :time_lower => set.midpoint }
           end
 
-          tasks = from_task(task, options)
+          set_opts = set_opts.merge(tasks_opts) if tasks_opts
+
+          tasks = from_task(task, set_opts, mixed_opts)
           # task.nodes.instance.type
           write_json tasks, "tasks-#{task.name}.json"
         end
@@ -147,12 +169,12 @@ class TasksGenerator
       return tasks
 
     elsif set.is_a?(MixedSet)
-      tasks = from_task(set)
+      tasks = from_task(set, tasks_opts, mixed_opts)
 
       write_json tasks, "tasks-#{set.name}.json"
 
     else
-      return nil
+      raise "the argument passed is not a set"
     end
   end
 
@@ -187,11 +209,11 @@ protected
         .map { |e| [ e[0], e[1].to_i ] }
     ]
   end
-      
-  def parse_options(line)
+
+  def parse_options(args)
     options = {}
     
-    return options unless line
+    return options unless args
 
     opts_parser = OptionParser::new do |opts|
       opts.on("-m", "--mode MODE") { |m|
@@ -206,9 +228,54 @@ protected
       opts.on("", "--include FILE")      { |t| options[:pkgs_include] = IO::read(t).split }
       opts.on("", "--exclude FILE")      { |t| options[:pkgs_exclude] = IO::read(t).split }
     end
-    opts_parser.parse!(line.split)
-    
+
+    if args.is_a? String
+      opts_parser.parse!(args.split)
+    elsif args.is_a? Array
+      opts_parser.parse!(args)
+    else
+      return nil
+    end
+
     options
+  end
+
+  #
+  # Merge options, taking into account that ":modes" is an array.
+  # Therefore we are suming it instead of rewriting.
+  #
+  def merge_options(opts1, opts2)
+    opts1.merge(opts2) do |key, old, new|
+      if key == :modes
+        old + new
+      else
+        new
+      end
+    end
+  end
+
+  #
+  # Merge the set options against the the "commandline passed" options.
+  #
+  # This takes into account that "mixed sets" options, can be aplied to
+  # some specific set.
+  #
+  def merge_mixed_option(mix_id, set_opts, task_options, mixed_opts)
+
+    options = merge_options set_opts.dup, task_options
+
+    mixed_opts.each do |k, v|
+      key_str = k.to_s
+
+      next if key_str[-1] != mix_id.to_s
+
+      last_idx = key_str.rindex "_"
+      key = key_str[0..last_idx-1].to_sym
+
+      options = merge_options options, { key => mixed_opts[k] } if key
+    end
+
+    return options
   end
 end
 

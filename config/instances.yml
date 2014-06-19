@@ -25,14 +25,14 @@
   - &clang !ruby/struct:BuildTask
     name: clang
     args: --no-arch-all -m binary-only -m parallel -m clang -i clang
-    
-  - &gcc49 !ruby/struct:BuildTask
-    name: gcc49
-    args: --no-arch-all -m binary-only -m parallel -m gcc49-unstable -i gcc
 
   - &normal-binary !ruby/struct:BuildTask
     name: normal
     args: --no-arch-all -m binary-only -m parallel -i normal
+
+  - &ref-binary !ruby/struct:BuildTask
+    name: clang
+    args: --no-arch-all -m binary-only -m parallel -i ref
 
 #
 # A set represent a collection of tasks and instances relationated
@@ -77,8 +77,8 @@
       name: medium
       
       nodes: !ruby/struct:Nodes
-        instance: *medium
-        count: 60
+        instance: *mlarge
+        count: 30
 
       tasks:
         - *clang
@@ -89,14 +89,14 @@
 
       nodes: !ruby/struct:Nodes
         instance: *xlarge
-        count: 10
+        count: 20
 
       tasks:
         - *clang
         - *normal-binary
 
   - !ruby/struct:BalancedSet
-    name: gcc-balanced
+    name: ref-balanced
     
     midpoint: 1800
 
@@ -108,7 +108,7 @@
         count: 60
 
       tasks:
-        - *gcc49
+        - *ref-binary
         - *normal-binary 
             
     lowertask: !ruby/struct:MixedSet
@@ -119,7 +119,7 @@
         count: 10
 
       tasks:
-        - *gcc49
+        - *ref-binary
         - *normal-binary
         
 #
