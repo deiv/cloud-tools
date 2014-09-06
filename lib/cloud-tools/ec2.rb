@@ -35,7 +35,7 @@ class Ec2
         thread << Thread::new(t) do |task|
           Thread::abort_on_exception = true
 
-          instances << request_spot_instances(task.nodes)
+          instances << request_spot_instances(task.nodes, "nodes-#{task.name}")
         end
       end
 
@@ -47,17 +47,17 @@ class Ec2
       return instances
 
     elsif set.is_a?(MixedSet)
-      return [request_spot_instances(set.nodes)]
+      return [request_spot_instances(set.nodes, "nodes-#{set.name}")]
 
     elsif set.is_a?(Nodes)
-      return [request_spot_instances(set)]
+      return [request_spot_instances(set, "nodes-#{instance.name}")]
 
     else
       return nil
     end
   end
 
-  def request_spot_instances(nodes)
+  def request_spot_instances(nodes, filename)
     #return nil
     # request instances
     response = @ec2.client.request_spot_instances(
@@ -81,8 +81,6 @@ class Ec2
     puts "reservation ids of #{nodes.instance.type} spot requests: #{requests}"
 
     instances = wait_for_instances(nodes.instance.type, requests, 15)
-
-    filename = "nodes.#{nodes.instance.type}"
 
     puts "nodes of type #{nodes.instance.type} written to #{filename}"
 
