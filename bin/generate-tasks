@@ -10,17 +10,7 @@ require 'optparse'
 require 'cloud-tools'
 require 'cloud-tools/tasks'
 
-def die_on_set_defined()
-  if $setname != nil then
-    puts "error: you cant specify instance parameter [-tcp] using a predefined set [-s]"
-    exit -1
-  end
-end
-
 $setname=nil
-$type=nil
-$count=nil
-$price=nil
 
 CloudTools::Config.load
 
@@ -28,7 +18,7 @@ tasks_options = {}
 mixed_options = {}
 
 options = OptionParser::new do |opts|
-  opts.banner = "Usage: ./reserve-ec2 ( -tcp | -s setname )"
+  opts.banner = "Usage: ./generate-tasks ( -miluc --no-arch-all --include FILE --exclude FILE -s setname )"
   opts.separator ""
   opts.separator "Options:"
 
