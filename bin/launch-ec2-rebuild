@@ -1,0 +1,145 @@
+#!/usr/bin/ruby
+#
+# Author:: David Suárez <david.sephirot@gmail.com>
+# Date:: Sat, 15 Jun 2013 17:59:54 +0200
+#
+
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
+require 'optparse'
+require 'net/ssh'
+require 'net/scp'
+
+require 'cloud-tools'
+require 'cloud-tools/config'
+require 'cloud-tools/ec2'
+require 'cloud-tools/tasks'
+require 'cloud-tools/masternode'
+
+$setname=nil
+$job_id=nil
+$dst_dir="/tmp"
+
+CloudTools::Config.load
+
+options = OptionParser::new do |opts|
+  opts.banner = "Usage: ./launch-ec2-rebuild -s setname -i jobid -d dir"
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("-s", "--set BUILD_SET", "Predefined set of build nodes") do |s|
+    $setname = s
+  end
+  opts.on("-i", "--id JOB_ID", "Job id") do |i|
+    $job_id = i
+  end
+  opts.on("-d", "--dst DIR", "Put things on DIR (logfile and buildlogs). Defaults to '/tmp'") do |d|
+    $dst_dir = d
+  end
+  opts.on("-l", "--list", "List of predefined sets") do
+    puts "List of predefined sets of nodes:"
+    CloudTools::Config.sets.each_value { |s| puts CloudTools::pretty_print_set s }
+    exit
+  end
+end
+
+options.parse!(ARGV)
+
+set = CloudTools::Config.sets[$setname]
+
+if not set
+  puts "error: unknown set specified"
+  exit 1
+end
+
+def launch_rebuild(task, id = nil, task_options = nil)
+  build_id = "#{task.name}"
+  build_id = "#{id}-#{task.name}" if id
+
+  tasks_file = "tasks-#{build_id}.json"
+  nodes_file = "nodes-#{build_id}"
+
+  tasks_gen = CloudTools::TasksGenerator.new
+  ec2 = CloudTools::Ec2.new
+  masternode = CloudTools::MasterNode.new
+  
+  tasks_gen.set_log_jobname build_id
+  ec2.set_log_jobname build_id
+  masternode.set_log_jobname build_id
+    
+  begin
+    # generate tasks
+    tasks = tasks_gen.from_task(task, task_options)
+    tasks_gen.write_json tasks, tasks_file
+    
+    # request instances
+    ec2.request_spot_instances(task.nodes, nodes_file)
+    
+    # scp needed files
+    masternode.upload_file(tasks_file)
+    masternode.upload_file(nodes_file)
+    
+    # wait for instances to boot
+    masternode.wait_for_instances_to_boot(nodes_file)
+
+    # launch masternode
+    time_string = Time.now.strftime("%m-%d-%Y")
+    build_id_date = "#{build_id}-#{time_string}"
+    global_id = id
+    global_id = task.name if not id
+    global_id = "#{global_id}-#{time_string}"
+    masternode.launch_rebuild(
+      build_id,
+      tasks_file,
+      nodes_file,
+      task.nodes.slots,
+      "#{$dst_dir}/#{build_id_date}.log",
+      "#{$dst_dir}/#{global_id}")
+
+  rescue Exception => ex
+    puts "job #{build_id} generated an exception: #{ex.message}"
+
+  ensure
+    # clean things
+    masternode.clear_connections()
+  end
+end
+
+if set.is_a?(BalancedSet)
+  thread = []
+  instances = []
+  tasks=[set.uppertask, set.lowertask]
+
+  tasks.each do |t|
+    thread << Thread::new(t, t==set.uppertask) do |task, upper|
+
+      Thread::abort_on_exception = true
+      
+      if upper
+        task_opts = { :time_upper => set.midpoint }
+      else
+        task_opts = { :time_lower => set.midpoint }
+      end
+
+      job_id = $job_id
+      job_id = set.name if not $job_id
+
+      launch_rebuild(task, job_id, task_opts)
+    end
+  end
+  
+  # wait for threads
+  thread.each do |th|
+    th.join
+  end
+
+elsif set.is_a?(MixedSet)
+
+  launch_rebuild(set)
+
+else
+  exit 1
+end
+
+
+exit 0

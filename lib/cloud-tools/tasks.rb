@@ -7,6 +7,8 @@ require 'pp'
 require 'open-uri'
 require 'json'
 
+require 'cloud-tools/job-based-logger'
+
 module CloudTools
 
 EXCLUDED_PKGS = %w{
@@ -23,6 +25,8 @@ SOURCE_REBUILD_URL='http://udd.debian.org/cgi-bin/sources_rebuild.cgi'
 
 class TasksGenerator
   
+  include JobBasedLogger
+
   @srcs_url
   @srcs
 
@@ -59,7 +63,7 @@ class TasksGenerator
 
     options = @@defaults.merge(options)
     
-    puts "generate: opts => #{options}"
+    log_info "generating tasks: opts => #{options}"
     
     esttime = estimated_times
 
@@ -179,11 +183,9 @@ class TasksGenerator
   end
 
   def write_json(tasks, filename)
-    if tasks.empty?
-      puts "warn: not writing #{filename}, empty tasks"
-    end
+    raise "not writing #{filename}, empty tasks" if tasks.empty?
 
-    puts "writing tasks file #{filename}"
+    log_info "writing tasks file #{filename}"
 
     File.open(filename,"w") do |f|
       f.write(JSON.pretty_generate(tasks))

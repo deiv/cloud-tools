@@ -4,22 +4,26 @@
 #
 
 require 'aws-sdk'
-require 'logger'
+
+require 'cloud-tools/job-based-logger'
 
 module CloudTools
 
 class Ec2
 
+  include JobBasedLogger
+
   @ec2 = nil
+  @logger = nil
 
   def initialize
     AWS.config(
       :access_key_id => Config.defaults[:credentials].id,
       :secret_access_key => Config.defaults[:credentials].secret,
       :region => Config.defaults[:region].name #,
-  #   :logger => Logger.new($stdout),
-  #   :log_level => :info
-  #     :max_retries => 2
+      #:logger => Logger.new($stdout),
+      #:log_level => :info
+      #:max_retries => 2
     )
 
     @ec2 = AWS::EC2.new
@@ -58,6 +62,9 @@ class Ec2
   end
 
   def request_spot_instances(nodes, filename)
+
+    log_info "requesting #{nodes.count} spot instance(s) of type #{nodes.instance.type}"
+
     #return nil
     # request instances
     response = @ec2.client.request_spot_instances(
@@ -69,7 +76,7 @@ class Ec2
       }
     )
 
-    return if not response.successful?
+    raise "bad response requesting spot instance(s)" if not response.successful?
 
     requests = []
 
@@ -78,11 +85,11 @@ class Ec2
       requests << i[:spot_instance_request_id]
     end
 
-    puts "reservation ids of #{nodes.instance.type} spot requests: #{requests}"
+    log_info "reservation ids of #{nodes.instance.type} spot requests: #{requests}"
 
     instances = wait_for_instances(nodes.instance.type, requests, 15)
 
-    puts "nodes of type #{nodes.instance.type} written to #{filename}"
+    log_info "nodes of type #{nodes.instance.type} written to #{filename}"
 
     # write internal ip's
     File.open(filename, 'w') do |file|
@@ -105,9 +112,9 @@ class Ec2
     # wait no more than 'timeout' minutes
     stop_time = Time.new + (60 * timeout)
 
-    wait_msg = "waiting for #{request_ids.count} instances of type #{type}"
+    wait_msg = "waiting for #{request_ids.count} instance(s) of type #{type} to appear"
 
-    puts wait_msg
+    log_info wait_msg
 
     instances = nil
 
@@ -123,8 +130,7 @@ class Ec2
       # check for timeout
       now = Time.new
       if now > stop_time then
-        puts "error: timeout while #{wait_msg}: you must check the instances by hand"
-        return nil
+        raise "error: timeout while #{wait_msg}: you must check the instances by hand"
       end
 
       # sleep one minute
@@ -132,8 +138,8 @@ class Ec2
 
       # print status
       now = Time.new
-      elapsed = now - start_time
-      puts "#{wait_msg}, elapsed: #{elapsed}, count: #{instances.count}"
+      elapsed = (now - start_time).round(0)
+      log_info "#{wait_msg}, elapsed: #{elapsed}s, count: #{instances.count}"
 
     end
 

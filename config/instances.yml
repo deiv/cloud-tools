@@ -34,6 +34,14 @@
     name: clang
     args: --no-arch-all -m binary-only -m parallel -i ref
 
+  - &normal-all !ruby/struct:BuildTask
+    name: normal-all
+    args: -i normal
+
+  - &ref-all !ruby/struct:BuildTask
+    name: ref-all
+    args: -i ref
+
 #
 # A set represent a collection of tasks and instances relationated
 #
@@ -47,15 +55,16 @@
       name: medium
       nodes: !ruby/struct:Nodes
         instance: *mlarge
-        count: 30 
-      #args: -u 1800
+        count: 30
+        slots: 6
 
     lowertask: !ruby/struct:BuildTask
       name: large
       nodes: !ruby/struct:Nodes
         instance: *xlarge
         count: 15
-      args: -m parallel #-l 1800 
+        slots: 3
+      args: -m parallel
 
   - !ruby/struct:MixedSet
     name: clang
@@ -63,6 +72,7 @@
     nodes: !ruby/struct:Nodes
       instance: *medium
       count: 60
+      slots: 3
 
     tasks:
       - *clang
@@ -79,6 +89,7 @@
       nodes: !ruby/struct:Nodes
         instance: *mlarge
         count: 30
+        slots: 6
 
       tasks:
         - *clang
@@ -90,13 +101,14 @@
       nodes: !ruby/struct:Nodes
         instance: *xlarge
         count: 20
+        slots: 3
 
       tasks:
         - *clang
         - *normal-binary
 
   - !ruby/struct:BalancedSet
-    name: ref-balanced
+    name: ref-balanced-binary
     
     midpoint: 1800
 
@@ -106,6 +118,7 @@
       nodes: !ruby/struct:Nodes
         instance: *mlarge
         count: 30
+        slots: 6
 
       tasks:
         - *ref-binary
@@ -117,11 +130,41 @@
       nodes: !ruby/struct:Nodes
         instance: *xlarge
         count: 20
+        slots: 3
 
       tasks:
         - *ref-binary
         - *normal-binary
-        
+
+  - !ruby/struct:BalancedSet
+    name: ref-balanced
+
+    midpoint: 1800
+
+    uppertask: !ruby/struct:MixedSet
+      name: medium
+
+      nodes: !ruby/struct:Nodes
+        instance: *mlarge
+        count: 1
+        slots: 6
+
+      tasks:
+        - *ref-all
+        - *normal-all
+
+    lowertask: !ruby/struct:MixedSet
+      name: large
+
+      nodes: !ruby/struct:Nodes
+        instance: *xlarge
+        count: 1
+        slots: 3
+
+      tasks:
+        - *ref-all
+        - *normal-all
+
 #
 # Things like AMI's, ebs, snapshots... are region dependent
 #
@@ -151,10 +194,17 @@
     secret: # go and get one !
 
 #
+# masternode related settings
+#
+:masternode:
+  :host: aws-logs.debian.net
+  :ssh-user: user
+  :work-dir: /home/user/cloud-scripts
+  :ruby-interpreter: ruby2.1
+
+#
 # Default settings to use if not overriden but commandline parameters
 #
 :defaults:
   :region: *sa-east
   :credentials: *qa
-  :masternode: http://aws-logs.debian.net/
-  :ssh-user: otheruser
