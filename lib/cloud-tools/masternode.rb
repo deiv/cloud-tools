@@ -3,6 +3,9 @@
 # Date: Sun, 07 Sep 2014 17:26:37 +0200
 #
 
+require 'net/ssh'
+require 'net/scp'
+
 require 'cloud-tools/job-based-logger'
 
 module CloudTools

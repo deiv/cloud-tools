@@ -7,8 +7,6 @@
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
 require 'optparse'
-require 'net/ssh'
-require 'net/scp'
 
 require 'cloud-tools'
 require 'cloud-tools/config'
