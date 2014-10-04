@@ -130,7 +130,7 @@ class TasksGenerator
       return tasks
 
     else
-      raise "can't handle mixed set options, the task is not a mixed set" if not mixed_opts.empty?
+      raise "can't handle mixed set options, the task is not a mixed set" if mixed_opts and not mixed_opts.empty?
 
       options = merge_options parse_options(task.args), tasks_opts
       return generate(options)
