@@ -196,6 +196,20 @@ class TasksGenerator
     return JSON::pretty_generate(tasks)
   end
 
+  #
+  # Merge options, taking into account that ":modes" is an array.
+  # Therefore we are suming it instead of rewriting.
+  #
+  def merge_options(opts1, opts2)
+    opts1.merge(opts2) do |key, old, new|
+      if key == :modes
+        old + new
+      else
+        new
+      end
+    end
+  end
+
 protected
 
   @esttimes = nil
@@ -240,20 +254,6 @@ protected
     end
 
     options
-  end
-
-  #
-  # Merge options, taking into account that ":modes" is an array.
-  # Therefore we are suming it instead of rewriting.
-  #
-  def merge_options(opts1, opts2)
-    opts1.merge(opts2) do |key, old, new|
-      if key == :modes
-        old + new
-      else
-        new
-      end
-    end
   end
 
   #

@@ -20,8 +20,10 @@ $dst_dir="/tmp"
 
 CloudTools::Config.load
 
+$global_task_options = {}
+
 options = OptionParser::new do |opts|
-  opts.banner = "Usage: ./launch-ec2-rebuild -s setname -i jobid -d dir"
+  opts.banner = "Usage: ./launch-ec2-rebuild -s setname -i jobid -d dir [tasks options]"
   opts.separator ""
   opts.separator "Options:"
 
@@ -39,6 +41,16 @@ options = OptionParser::new do |opts|
     CloudTools::Config.sets.each_value { |s| puts CloudTools::pretty_print_set s }
     exit
   end
+
+  opts.separator ""
+  opts.separator "Tasks options (they take preference):"
+  opts.on("-m", "--mode MODE") { |m|
+    $global_task_options[:modes] = [] unless $global_task_options[:modes]
+    $global_task_options[:modes] << m
+  }
+  opts.on("-c", "--chroot CHROOT")   { |t| $global_task_options[:chroot] = t }
+  opts.on("", "--include FILE")      { |t| $global_task_options[:pkgs_include] = IO::read(t).split }
+  opts.on("", "--exclude FILE")      { |t| $global_task_options[:pkgs_exclude] = IO::read(t).split }
 end
 
 options.parse!(ARGV)
@@ -67,16 +79,18 @@ def launch_rebuild(task, id = nil, task_options = nil)
     
   begin
     # generate tasks
+    task_options = {} if not task_options
+    task_options = tasks_gen.merge_options(task_options, $global_task_options)
     tasks = tasks_gen.from_task(task, task_options)
     tasks_gen.write_json tasks, tasks_file
-    
+
     # request instances
     ec2.request_spot_instances(task.nodes, nodes_file)
-    
+
     # scp needed files
     masternode.upload_file(tasks_file)
     masternode.upload_file(nodes_file)
-    
+
     # wait for instances to boot
     masternode.wait_for_instances_to_boot(nodes_file)
 
