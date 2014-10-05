@@ -25,6 +25,22 @@ module CloudTools
       return logger
     end
 
+    def log_to_stderr()
+      logger = Logger.new($stderr)
+
+      logger.formatter = proc do |severity, datetime, jobname, msg|
+        date_str = datetime.strftime("%H:%M:%S")
+
+        if jobname
+          "#{date_str} [job #{jobname}]: #{msg}\n"
+        else
+          "#{date_str}: #{msg}\n"
+        end
+      end
+
+      @@std_logger = logger
+    end
+
     @@std_logger = self.create_logger
 
     def log_info(msg)

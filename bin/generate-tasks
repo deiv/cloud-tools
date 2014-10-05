@@ -6,11 +6,14 @@
 
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
+require 'json'
+
 require 'optparse'
 require 'cloud-tools'
 require 'cloud-tools/tasks'
 
 $setname=nil
+$outfile=nil
 
 CloudTools::Config.load
 
@@ -18,9 +21,12 @@ tasks_options = {}
 mixed_options = {}
 
 options = OptionParser::new do |opts|
-  opts.banner = "Usage: ./generate-tasks ( -miluc --no-arch-all --include FILE --exclude FILE -s setname )"
+  opts.banner = "Usage: ./generate-tasks ( -miluc --no-arch-all --include FILE --exclude FILE -o file)"
+  opts.banner = "Usage: ./generate-tasks -s setname [modificator]"
   opts.separator ""
   opts.separator "Options:"
+
+  opts.on("-w", "--write FILE", "Write tasks to FILE (print to stdout if not given") { |w| $outfile = w }
 
   opts.separator "  globals:"
   opts.on("-m", "--mode MODE") { |m|
@@ -79,15 +85,18 @@ if not instances
   end
 end
 
-puts "generating tasks"
-
 tasksGen = CloudTools::TasksGenerator.new
+tasksGen.log_to_stderr() if not $outfile and not instances
 
 if instances
   tasks = tasksGen.from_buildset(instances, tasks_options, mixed_options)
 else
   tasks = tasksGen.generate(tasks_options)
-  tasksGen.write_json(tasks, "tasks.json")
+  if $outfile
+    tasksGen.write_json(tasks, $outfile)
+  else
+    STDOUT.write(JSON.pretty_generate(tasks))
+  end
 end
 
 exit 0
