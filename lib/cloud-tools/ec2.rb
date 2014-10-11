@@ -54,7 +54,7 @@ class Ec2
       return [request_spot_instances(set.nodes, "nodes-#{set.name}")]
 
     elsif set.is_a?(Nodes)
-      return [request_spot_instances(set, "nodes-#{instance.name}")]
+      return [request_spot_instances(set, "nodes-#{set.instance.name}")]
 
     else
       return nil
