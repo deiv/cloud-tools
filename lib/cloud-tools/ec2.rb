@@ -65,16 +65,10 @@ class Ec2
 
     log_info "requesting #{nodes.count} spot instance(s) of type #{nodes.instance.type}"
 
-    #return nil
+    options = create_spot_request_options(nodes)
+
     # request instances
-    response = @ec2.client.request_spot_instances(
-      :spot_price => nodes.instance.price.to_s,
-      :instance_count => nodes.count.to_i,
-      :launch_specification => {
-      :image_id => Config.defaults[:region].ami,
-      :instance_type => nodes.instance.type
-      }
-    )
+    response = @ec2.client.request_spot_instances(options)
 
     raise "bad response requesting spot instance(s)" if not response.successful?
 
@@ -99,6 +93,25 @@ class Ec2
     end
 
     return instances
+  end
+
+  def create_spot_request_options(nodes)
+
+    security_groups = Config.defaults[:securitygroups] || []
+    security_groups += nodes[:'securitygroups'] if nodes[:'securitygroups']
+
+    launch_specification = {
+      :image_id => Config.defaults[:region].ami,
+      :instance_type => nodes.instance.type
+    }
+
+    launch_specification[:security_groups] = security_groups if security_groups.any?
+
+    options = {
+      :spot_price => nodes.instance.price.to_s,
+      :instance_count => nodes.count.to_i,
+      :launch_specification => launch_specification
+    }
   end
 
   #

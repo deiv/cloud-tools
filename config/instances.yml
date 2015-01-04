@@ -165,6 +165,37 @@
         - *ref-all
         - *normal-all
 
+  - !ruby/struct:BalancedSet
+    name: test
+
+    midpoint: 1800
+
+    uppertask: !ruby/struct:MixedSet
+      name: medium
+
+      nodes: !ruby/struct:Nodes
+        instance: *mlarge
+        count: 1
+        slots: 6
+#        securitygroups:
+#          - instance-sg
+
+      tasks:
+        - *ref-all
+        - *normal-all
+
+    lowertask: !ruby/struct:MixedSet
+      name: large
+
+      nodes: !ruby/struct:Nodes
+        instance: *xlarge
+        count: 1
+        slots: 3
+
+      tasks:
+        - *ref-all
+        - *normal-all
+
 #
 # Things like AMI's, ebs, snapshots... are region dependent
 #
@@ -208,3 +239,6 @@
 :defaults:
   :region: *sa-east
   :credentials: *qa
+#  :securitygroups:
+#    - default
+#    - no-network-access
