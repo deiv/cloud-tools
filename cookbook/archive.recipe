@@ -1,0 +1,30 @@
+
+build_set "archive-rebuild" do
+
+  balance_nodes do
+    mid_point 1600
+
+    upper_task do
+      nodes do
+        instance "xlarge"
+        count 15
+        slots 3
+      end
+    end
+
+    lower_task do
+      nodes do
+        instance "medium"
+        count 30
+        slots 6
+      end
+
+      args do
+        mode :parallel
+      end
+    end
+  end
+
+  task "normal" do
+  end
+end

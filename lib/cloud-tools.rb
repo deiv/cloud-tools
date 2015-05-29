@@ -1,5 +1,5 @@
 
-require "cloud-tools/version"
+require 'cloud-tools/version'
 require 'cloud-tools/model.rb'
 require 'cloud-tools/config.rb'
 
@@ -9,61 +9,26 @@ module CloudTools
 
   $config_dir = File.join(ENV['HOME'], ".cloud-tools")
 
-  def self.pretty_print_set(set)
-    pretty_set set, 0
+  def self.puts_indented(text, level)
+    puts "  " * level + text
   end
+  
+  def self.pretty_recipe(recipe)
+    products = recipe.cook
 
-  def self.pretty_set(set, indent_level)
+    puts_indented "- #{recipe.name} recipe produces:", 0
 
-    if set.is_a? MixedSet
-      puts_indented "- #{set.name} [MixedSet]:", indent_level
-
-      set.tasks.each do |t|
-        pretty_task t, 1
+    products.each do |p|
+      puts ""
+      puts_indented "+ #{p.name} [BuildTask]:", 1
+      puts_indented "args:", 2
+      p.tasks.each do |k, v|
+        puts_indented "#{k} -> \"#{v}\"", 3
       end
-      puts_indented "nodes -> #{set.nodes.count} x (#{set.nodes.instance.type} - #{set.nodes.instance.price}$)", 1
-
-    else
-      puts_indented "- #{set.name} [BalancedSet] (midpoint: #{set.midpoint}):", indent_level
-
-      puts_indented "uppertask:", indent_level + 1
-      pretty_task set.uppertask, indent_level + 2
-
-      puts "\n"
-
-      puts_indented "lowertask:", indent_level + 1
-      pretty_task set.lowertask, indent_level + 2
+      puts_indented "nodes -> #{p.nodes.count} x (#{p.nodes.instance.type} - #{p.nodes.instance.price}$)", 2      
     end
 
     puts ""
-  end
-
-  def self.pretty_task(task, indent_level)
-
-    if task.is_a?(MixedSet)
-      set = task
-
-      puts_indented "- #{set.name} [MixedSet]:", indent_level
-
-      set.tasks.each do |t|
-        pretty_task t, indent_level + 1
-      end
-
-      puts_indented "nodes -> #{set.nodes.count} x (#{set.nodes.instance.type} - #{set.nodes.instance.price}$)", indent_level + 1
-
-    elsif task.is_a?(BuildTask)
-
-      if task.nodes == nil
-        puts_indented "task -> name: #{task.name}, args: \"#{task.args}\"", indent_level
-      else
-        puts_indented "task -> name: #{task.name}, args: \"#{task.args}\"", indent_level
-        puts_indented "nodes -> #{task.nodes.count} x (#{task.nodes.instance.type} - #{task.nodes.instance.price}$)", indent_level
-      end
-    end
-  end
-
-  def self.puts_indented(text, level)
-    puts "  " * level + text
   end
 
 end

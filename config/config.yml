@@ -1,0 +1,70 @@
+#
+# System configuration file for cloud-tools
+#
+
+#
+# instances and tasks sections, are just placeholders. They are not used by the code.
+#
+:instances:
+  - &medium !ruby/struct:Instance
+    name: medium
+    type: m1.medium
+    price: .16
+    
+  - &mlarge !ruby/struct:Instance
+    name: mlarge
+    type: m1.large
+    price: .32
+
+  - &xlarge !ruby/struct:Instance
+    name: xlarge
+    type: m2.xlarge
+    price: .5
+
+#
+# Things like AMI's, ebs, snapshots... are region dependent
+#
+:regions:
+  - &us-east !ruby/struct:Region
+    name: us-east-1
+    ami: ami-439df12a
+
+  - &sa-east !ruby/struct:Region
+    name: us-west-2
+    ami: ami-6f47685f
+    #ami-e6a832d6
+
+#
+# We can have multiple credentials !
+#
+:credentials:
+  # qa user - limited
+  - &qa !ruby/struct:Credentials
+    name: qa
+    id: # go and get one !
+    secret: # go and get one !
+
+  # otheruser - admin
+  - &david !ruby/struct:Credentials
+    name: otheruser
+    id: # go and get one !
+    secret: # go and get one !
+
+#
+# masternode related settings
+#
+:masternode:
+  :host: aws-logs.debian.net
+  :ssh-user: user
+  :work-dir: /home/user/cloud-scripts
+  :ruby-interpreter: ruby2.1
+
+#
+# Default settings to use if not overriden but commandline parameters
+#
+:defaults:
+  :region: *sa-east
+  :credentials: *qa
+#  :securitygroups:
+#    - default
+#    - no-network-access

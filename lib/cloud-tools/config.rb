@@ -9,7 +9,7 @@ class Config
 
   @@regions = {}
   @@instances = {}
-  @@sets = {}
+  @@recipes = {}
   @@defaults = {}
   @@credentials = {}
   @@masternode = {}
@@ -22,8 +22,8 @@ class Config
     @@instances
   end
 
-  def self.sets
-    @@sets
+  def self.recipes
+    @@recipes
   end
 
   def self.credentials
@@ -39,22 +39,29 @@ class Config
   end
 
   def self.load
-    config_file = File.join($config_dir, "instances.yml")
+    config_file = File.join($config_dir, "config.yml")
 
     unless File.exist?(config_file)
       puts "error: Unable to find the config file"
       exit 1
     end
 
-    instances = YAML.load(File.read(config_file))
+    config = YAML.load(File.read(config_file))
 
-    load_struct instances[:regions], @@regions
-    load_struct instances[:instances], @@instances
-    load_struct instances[:sets], @@sets
-    load_struct instances[:credentials], @@credentials
+    load_struct config[:regions], @@regions
+    load_struct config[:instances], @@instances
+    load_struct config[:credentials], @@credentials
 
-    @@defaults   = instances[:defaults]
-    @@masternode = instances[:masternode]
+    @@defaults   = config[:defaults]
+    @@masternode = config[:masternode]
+
+    cookbook_dir = File.join($config_dir, "cookbook")
+
+    @@recipes = Hash[
+      Dir["#{cookbook_dir}/*.recipe"].map do |path|
+         [File.basename(path, File.extname(path)), path]
+      end
+    ]
   end
 
 protected

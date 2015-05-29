@@ -28,36 +28,22 @@ class Ec2
 
     @ec2 = AWS::EC2.new
   end
-  
-  def request_set(set)
-    if set.is_a?(BalancedSet)
-      thread = []
-      instances = []
-      tasks=[set.uppertask, set.lowertask]
 
-      tasks.each do |t|
-        thread << Thread::new(t) do |task|
-          Thread::abort_on_exception = true
+  def from_recipe(recipe)
 
-          instances << request_spot_instances(task.nodes, "nodes-#{task.name}")
-        end
+    products = recipe.cook
+
+    thread = []
+
+    products.each do |p|
+      thread << Thread::new(p) do |p|
+        request_spot_instances(p.nodes, "nodes-#{p.name}")
       end
+    end
 
-      # wait for threads
-      thread.each do |th|
-        th.join
-      end
-
-      return instances
-
-    elsif set.is_a?(MixedSet)
-      return [request_spot_instances(set.nodes, "nodes-#{set.name}")]
-
-    elsif set.is_a?(Nodes)
-      return [request_spot_instances(set, "nodes-#{set.instance.name}")]
-
-    else
-      return nil
+    # wait for threads
+    thread.each do |th|
+      th.join
     end
   end
 

@@ -1,0 +1,10 @@
+
+include_recipe "cookbook/reference"
+
+build_set "clang-balanced", :inherits => "reference-balanced" do
+
+  task "test" do
+    mode "clang"
+    log_id "clang"
+  end
+end

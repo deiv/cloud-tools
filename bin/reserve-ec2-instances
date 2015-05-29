@@ -18,16 +18,17 @@ $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
 require 'optparse'
 require 'cloud-tools'
+require 'cloud-tools/recipe'
 require 'cloud-tools/ec2'
 
 def die_on_set_defined()
-  if $setname != nil then
-    puts "error: you cant specify instance parameter [-tcp] using a predefined set [-s]"
+  if $recipe != nil then
+    puts "error: you can't specify instance parameter [-tcp] using a recipe [-r]"
     exit -1
   end
 end
 
-$setname=nil
+$recipe=nil
 $type=nil
 $count=nil
 $price=nil
@@ -36,7 +37,7 @@ CloudTools::Config.load
 
 options = OptionParser::new do |opts|
   opts.banner = "Usage: ./reserve-ec2 -tcp"
-  opts.banner = "Usage: ./reserve-ec2 -s setname"
+  opts.banner = "Usage: ./reserve-ec2 -r recipe"
   opts.separator ""
   opts.separator "Options:"
 
@@ -58,28 +59,45 @@ options = OptionParser::new do |opts|
     die_on_set_defined
     $price = p
   end
-  opts.on("-s", "--set BUILD_SET", "Predefined set of build nodes") do |s|
-    $setname = s
+
+  opts.separator ""
+  opts.separator "  recipes:"
+  opts.on("-r", "--recipe RECIPE", "Use recipe") do |r|
+    $recipe = r
   end
-  opts.on("-l", "--list", "List of predefined sets") do 
-    puts "List of predefined sets of nodes:"
-    CloudTools::Config.sets.each_value { |s| puts CloudTools::pretty_print_set s }
+  opts.on("-l", "--list", "List of know recipes") do
+    puts "List of know recipes:"
+    puts ""
+
+    CloudTools::Config.recipes.each_value do |r|
+      recipe = CloudTools::Recipe.load r
+      CloudTools.pretty_recipe recipe
+    end
     exit
   end
 end
 
 options.parse!(ARGV)
 
-instances = CloudTools::Config.sets[$setname] if $setname
+recipe_name = CloudTools::Config.recipes[$recipe]
 
-# exit if a set is requested but we can't get his definition in the config
-if not instances and $setname
-  puts "error: unknown set specified" 
+# exit if a recipe is requested but we can't get his definition in the config
+if not recipe_name and $recipe
+  puts "error: unknown recipe specified"
   exit 1
 end
 
+puts "requesting instances"
+
+# initialize ec2 ...
+ec2 = CloudTools::Ec2.new
+
 # if not set defined, we try to build a custom one from the commandline
-if not instances
+if recipe_name
+  recipe = CloudTools::Recipe.load recipe_name
+  ec2.from_recipe recipe
+
+else
   if $type == nil || $count == nil || $price == nil then
     puts "error: bad argument count, use -h for help"
     exit 2
@@ -93,14 +111,8 @@ if not instances
   instances.instance.type  = $type
   instances.instance.price = $price
   instances.count          = $count
+
+  ec2.request_spot_instances instances, "nodes-custom-by-args"
 end
-
-puts "requesting instances"
-
-# initialize ec2 ...
-ec2 = CloudTools::Ec2.new
-
-# ... and request the instances from set
-instances = ec2.request_set instances
 
 exit 0

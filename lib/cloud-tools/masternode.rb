@@ -45,6 +45,8 @@ class MasterNode
     log_info "uploading #{file} to #{@host}:#{@scripts_dir}"
     
     scp = get_scp_connection()
+
+    # TODO: handle timeouts; retry again ?
     scp.upload!(file, @scripts_dir)
   end
 

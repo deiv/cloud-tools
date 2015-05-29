@@ -10,11 +10,12 @@ require 'optparse'
 
 require 'cloud-tools'
 require 'cloud-tools/config'
+require 'cloud-tools/recipe'
 require 'cloud-tools/ec2'
-require 'cloud-tools/tasks'
+require 'cloud-tools/generator/tasks'
 require 'cloud-tools/masternode'
 
-$setname=nil
+$recipe=nil
 $job_id=nil
 $dst_dir="/tmp"
 
@@ -23,22 +24,30 @@ CloudTools::Config.load
 $global_task_options = {}
 
 options = OptionParser::new do |opts|
-  opts.banner = "Usage: ./launch-ec2-rebuild -s setname -i jobid -d dir [tasks options]"
+  opts.banner = "Usage: ./launch-ec2-rebuild -r recipe -i jobid -d dir [tasks options]"
   opts.separator ""
   opts.separator "Options:"
 
-  opts.on("-s", "--set BUILD_SET", "Predefined set of build nodes") do |s|
-    $setname = s
-  end
   opts.on("-i", "--id JOB_ID", "Job id") do |i|
     $job_id = i
   end
   opts.on("-d", "--dst DIR", "Put things on DIR (logfile and buildlogs). Defaults to '/tmp'") do |d|
     $dst_dir = d
   end
-  opts.on("-l", "--list", "List of predefined sets") do
-    puts "List of predefined sets of nodes:"
-    CloudTools::Config.sets.each_value { |s| puts CloudTools::pretty_print_set s }
+
+  opts.separator ""
+  opts.separator "  recipes:"
+  opts.on("-r", "--recipe RECIPE", "Use recipe") do |r|
+    $recipe = r
+  end
+  opts.on("-l", "--list", "List of know recipes") do
+    puts "List of know recipes:"
+    puts ""
+
+    CloudTools::Config.recipes.each_value do |r|
+      recipe = CloudTools::Recipe.load r
+      CloudTools.pretty_recipe recipe
+    end
     exit
   end
 
@@ -55,21 +64,20 @@ end
 
 options.parse!(ARGV)
 
-set = CloudTools::Config.sets[$setname]
+recipe_name = CloudTools::Config.recipes[$recipe]
 
-if not set
-  puts "error: unknown set specified"
+if not recipe_name
+  puts "error: unknown recipe specified"
   exit 1
 end
 
-def launch_rebuild(task, id = nil, task_options = nil)
-  build_id = "#{task.name}"
-  build_id = "#{id}-#{task.name}" if id
+def launch_rebuild(build_set, id = nil, task_options = nil)
+  build_id = "#{build_set.name}"
 
   tasks_file = "tasks-#{build_id}.json"
   nodes_file = "nodes-#{build_id}"
 
-  tasks_gen = CloudTools::TasksGenerator.new
+  tasks_gen = CloudTools::Generators::TasksGenerator.new
   ec2 = CloudTools::Ec2.new
   masternode = CloudTools::MasterNode.new
   
@@ -80,12 +88,12 @@ def launch_rebuild(task, id = nil, task_options = nil)
   begin
     # generate tasks
     task_options = {} if not task_options
-    task_options = tasks_gen.merge_options(task_options, $global_task_options)
-    tasks = tasks_gen.from_task(task, task_options)
+    task_options = task_options.merge_adding_arys $global_task_options
+    tasks = tasks_gen.from_buid_set(build_set, task_options)
     tasks_gen.write_json tasks, tasks_file
 
     # request instances
-    ec2.request_spot_instances(task.nodes, nodes_file)
+    ec2.request_spot_instances(build_set.nodes, nodes_file)
 
     # scp needed files
     masternode.upload_file(tasks_file)
@@ -98,18 +106,19 @@ def launch_rebuild(task, id = nil, task_options = nil)
     time_string = Time.now.strftime("%m-%d-%Y")
     build_id_date = "#{build_id}-#{time_string}"
     global_id = id
-    global_id = task.name if not id
+    global_id = build_set.name if not id
     global_id = "#{global_id}-#{time_string}"
     masternode.launch_rebuild(
       build_id,
       tasks_file,
       nodes_file,
-      task.nodes.slots,
+      build_set.nodes.slots,
       "#{$dst_dir}/#{build_id_date}.log",
       "#{$dst_dir}/#{global_id}")
 
   rescue Exception => ex
     puts "job #{build_id} generated an exception: #{ex.message}"
+    print ex.backtrace.join("\n")
 
   ensure
     # clean things
@@ -117,41 +126,21 @@ def launch_rebuild(task, id = nil, task_options = nil)
   end
 end
 
-if set.is_a?(BalancedSet)
-  thread = []
-  instances = []
-  tasks=[set.uppertask, set.lowertask]
+recipe = CloudTools::Recipe.load recipe_name
 
-  tasks.each do |t|
-    thread << Thread::new(t, t==set.uppertask) do |task, upper|
+products = recipe.cook
 
-      Thread::abort_on_exception = true
-      
-      if upper
-        task_opts = { :time_upper => set.midpoint }
-      else
-        task_opts = { :time_lower => set.midpoint }
-      end
+thread = []
 
-      job_id = $job_id
-      job_id = set.name if not $job_id
-
-      launch_rebuild(task, job_id, task_opts)
-    end
+products.each do |p|
+  thread << Thread::new(p) do |p|
+    launch_rebuild(p)
   end
-  
-  # wait for threads
-  thread.each do |th|
-    th.join
-  end
-
-elsif set.is_a?(MixedSet)
-
-  launch_rebuild(set)
-
-else
-  exit 1
 end
 
+# wait for threads
+thread.each do |th|
+  th.join
+end
 
 exit 0

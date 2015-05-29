@@ -10,9 +10,10 @@ require 'json'
 
 require 'optparse'
 require 'cloud-tools'
-require 'cloud-tools/tasks'
+require 'cloud-tools/recipe'
+require 'cloud-tools/generator/tasks'
 
-$setname=nil
+$recipe=nil
 $outfile=nil
 
 CloudTools::Config.load
@@ -43,13 +44,18 @@ options = OptionParser::new do |opts|
   opts.on("", "--exclude FILE")      { |t| tasks_options[:pkgs_exclude] = IO::read(t).split }
 
   opts.separator ""
-  opts.separator "  sets:"
-  opts.on("-s", "--set BUILD_SET", "Predefined set of build nodes") do |s|
-    $setname = s
+  opts.separator "  recipes:"
+  opts.on("-r", "--recipe RECIPE", "Use recipe") do |r|
+    $recipe = r
   end
-  opts.on("-l", "--list", "List of predefined sets") do 
-    puts "List of predefined sets of nodes:"
-    CloudTools::Config.sets.each_value { |s| puts CloudTools::pretty_print_set s }
+  opts.on("-l", "--list", "List of know recipes") do
+    puts "List of know recipes:"
+    puts ""
+
+    CloudTools::Config.recipes.each_value do |r|
+      recipe = CloudTools::Recipe.load r
+      CloudTools.pretty_recipe recipe
+    end
     exit
   end
 
@@ -69,29 +75,30 @@ options = OptionParser::new do |opts|
 end
 options.parse!(ARGV)
 
-instances = CloudTools::Config.sets[$setname] if $setname
+recipe_name = CloudTools::Config.recipes[$recipe]
 
-# exit if a set is requested but we can't get his definition in the config
-if not instances and $setname
+# exit if a recipe is requested but we can't get his definition in the config
+if not recipe_name and $recipe
   puts "error: unknown set specified" 
   exit 1
 end
 
-# if not set defined, we try to build a custom one from the commandline
-if not instances
+# if not recipe defined, we try to build a custom one from the commandline
+if not recipe_name
   if tasks_options.empty?
     puts "error: bad argument count, use -h for help"
     exit 2
   end
 end
 
-tasksGen = CloudTools::TasksGenerator.new
-tasksGen.log_to_stderr() if not $outfile and not instances
+tasksGen = CloudTools::Generators::TasksGenerator.new
+tasksGen.log_to_stderr() if not $outfile and not recipe_name
 
-if instances
-  tasks = tasksGen.from_buildset(instances, tasks_options, mixed_options)
+if recipe_name
+  recipe = CloudTools::Recipe.load recipe_name
+  tasks = tasksGen.from_recipe(recipe, tasks_options, mixed_options)
 else
-  tasks = tasksGen.generate(tasks_options)
+  tasks = tasksGen.from_hash(tasks_options)
   if $outfile
     tasksGen.write_json(tasks, $outfile)
   else
