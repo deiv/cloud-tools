@@ -9,6 +9,8 @@ dsl_full = <<EOT
     instance "xlarge"
     count 15
     slots 3
+    tag "Tag1Name", "Tag1Value"
+    tag "Tag2Name", "Tag2Value"
   end
 
   task "test" do
@@ -32,6 +34,8 @@ dsl_full_balanced = <<EOT
         instance "xlarge"
         count 15
         slots 3
+        tag "Tag1Name", "Tag1Value"
+        tag "Tag2Name", "Tag2Value"
       end
 
       args do
@@ -139,7 +143,13 @@ describe ::Dsl::Builders::BuildSetBuilder do
     it "should generate the correct model" do
       dsl_full_expected_model = ::Dsl::Model::DslBuildSet.new(
         '',
-        Nodes.new(CloudTools::Config.instances['xlarge'], 15, 3, nil),
+        Nodes.new(
+          CloudTools::Config.instances['xlarge'],
+          15,
+          3,
+          [],
+          { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" }
+        ),
         { "test"=>{:no_arch_all=>true, :modes=>[:binary_only]},
           "reference"=>{:no_arch_all=>true, :modes=>[:binary_only], :log_id=>"normal"} }
       )
@@ -164,12 +174,18 @@ describe ::Dsl::Builders::BuildSetBuilder do
           1600,
           ::Dsl::Model::DslBuildSet.new(
             "uppertask",
-            Nodes.new(CloudTools::Config.instances['xlarge'], 15, 3, nil),
+            Nodes.new(
+              CloudTools::Config.instances['xlarge'],
+              15,
+              3,
+              [],
+              { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" }
+            ),
             {:* => {:modes=>[:parallel]}}
           ),
           ::Dsl::Model::DslBuildSet.new(
             "lowertask",
-            Nodes.new(CloudTools::Config.instances['medium'], 30, 6, nil),
+            Nodes.new(CloudTools::Config.instances['medium'], 30, 6, [], {}),
             {}
           )
        ),

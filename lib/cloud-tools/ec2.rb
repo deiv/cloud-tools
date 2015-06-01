@@ -69,7 +69,17 @@ class Ec2
 
     instances = wait_for_instances(nodes.instance.type, requests, 15)
 
-    log_info "nodes of type #{nodes.instance.type} written to #{filename}"
+    begin
+      tags = Config.defaults[:tags] || {}
+      tags = tags.merge nodes[:tags] if nodes[:tags]
+
+      tags.each do |k, v|
+        log_info "adding tag #{k}=#{v}"
+        tag_instances instances, k, v
+      end
+    rescue AWS::EC2::Errors::UnauthorizedOperation => ex
+      log_error "not authorized to tag instances"
+    end
 
     # write internal ip's
     File.open(filename, 'w') do |file|
@@ -77,6 +87,8 @@ class Ec2
       file.puts i.private_ip_address
       end
     end
+
+    log_info "nodes of type #{nodes.instance.type} written to #{filename}"
 
     return instances
   end
@@ -143,6 +155,15 @@ class Ec2
     end
 
     return instances
+  end
+
+  #
+  # needs 'ec2:CreateTags'
+  #
+  def tag_instances(instances, name, value)
+    instances.each do |instance|
+        instance.tag(name, value: value)
+    end
   end
 
   def filter(type)

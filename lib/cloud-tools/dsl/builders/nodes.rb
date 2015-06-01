@@ -10,6 +10,8 @@ module Dsl; module Builders;
 
     def initialize()
       @model = Nodes.new
+      @model.securitygroups = []
+      @model.tags = {}
     end
 
     def instance(i)
@@ -26,6 +28,10 @@ module Dsl; module Builders;
 
     def securitygroups(s)
       @model.securitygroups = s
+    end
+
+    def tag(k, v)
+      @model.tags[k] = v
     end
 
     def validate_model

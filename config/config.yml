@@ -65,6 +65,9 @@
 :defaults:
   :region: *sa-east
   :credentials: *qa
+  :tags:
+    Team: Debian-QA
+
 #  :securitygroups:
 #    - default
 #    - no-network-access

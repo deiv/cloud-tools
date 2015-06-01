@@ -9,6 +9,8 @@ dsl_full = <<EOT
   count 15
   slots 3
   securitygroups "sg1"
+  tag "Tag1Name", "Tag1Value"
+  tag "Tag2Name", "Tag2Value"
 EOT
 
 dsl_bad = <<EOT
@@ -36,7 +38,8 @@ describe ::Dsl::Builders::NodesBuilder do
         Instance.new("xlarge", "m2.xlarge", 0.5),
         15,
         3,
-        "sg1"
+        "sg1",
+        { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" }
       )
 
       @nodes_builder.eval_block { eval dsl_full }
@@ -51,7 +54,8 @@ describe ::Dsl::Builders::NodesBuilder do
       assert_equal nil, @nodes_builder.model.instance
       assert_equal nil, @nodes_builder.model.count
       assert_equal nil, @nodes_builder.model.slots
-      assert_equal nil, @nodes_builder.model.securitygroups
+      assert_equal [], @nodes_builder.model.securitygroups
+      assert_equal Hash.new, @nodes_builder.model.tags
     end
   end
 
