@@ -2,6 +2,3 @@
 TODO:
 
   - Write a description.
-
-  - Add tag support to instances request (name="Team", value="Debian-QA").
-    Needed by new account policy.
