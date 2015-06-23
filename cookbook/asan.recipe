@@ -1,0 +1,18 @@
+#
+# Rebuild for Mohit Bhakkad "Archive built with asan" GSoC.
+#
+
+include_recipe "cookbook/archive"
+
+build_set "asan-balanced", :inherits => "archive-rebuild" do
+
+  task "normal" do
+    no_arch_all
+
+    mode "binary-only"
+    mode "clang"
+    mode "add-asan-flags"
+
+    log_id "asan-flags"
+  end
+end
