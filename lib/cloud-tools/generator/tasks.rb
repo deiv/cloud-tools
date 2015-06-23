@@ -48,7 +48,7 @@ class TasksGenerator
 
   @@defaults = {
     :chroot => "unstable",
-    :noall => false,
+    :no_arch_all => false,
     :log_id => nil,
     :time_upper => nil,
     :time_lower => nil,
@@ -68,7 +68,7 @@ class TasksGenerator
 
     esttime = estimated_times
 
-    pkgs = srcs.reject { |e| options[:noall] and e[2] == 'all' }
+    pkgs = srcs.reject { |e| options[:no_arch_all] and e[2] == 'all' }
 
     tasks = []
 
