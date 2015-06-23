@@ -10,6 +10,10 @@ build_set "archive-rebuild" do
         count 15
         slots 3
       end
+
+      args do
+        mode :parallel
+      end
     end
 
     lower_task do
@@ -17,10 +21,6 @@ build_set "archive-rebuild" do
         instance "medium"
         count 30
         slots 6
-      end
-
-      args do
-        mode :parallel
       end
     end
   end
