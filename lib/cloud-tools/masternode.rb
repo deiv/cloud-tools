@@ -51,7 +51,7 @@ class MasterNode
   end
 
   def launch_rebuild(id, tasks_file, nodes_file, slots, log_path, out_dir)
-    cmd = "cd #{@scripts_dir} && screen -d -m -S #{id} #{@ruby_interpreter} #{@scripts_dir}/masternode " +
+    cmd = "cd #{@scripts_dir} && screen -d -m -S #{id} #{@ruby_interpreter} masternode " +
           "-t #{@scripts_dir}/#{tasks_file} -n #{@scripts_dir}/#{nodes_file} " +
           "-s #{slots} -o #{log_path} -d #{out_dir}"
     
