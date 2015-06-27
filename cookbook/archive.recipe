@@ -18,7 +18,7 @@ build_set "archive-rebuild" do
 
     lower_task do
       nodes do
-        instance "medium"
+        instance "mlarge"
         count 30
         slots 6
       end
