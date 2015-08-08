@@ -12,6 +12,7 @@ module Dsl; module Builders;
       @model = Nodes.new
       @model.securitygroups = []
       @model.tags = {}
+      @model[:'vpc-securitygroups-ids'] = []
     end
 
     def instance(i)
@@ -26,12 +27,20 @@ module Dsl; module Builders;
       @model.slots = s
     end
 
-    def securitygroups(s)
-      @model.securitygroups = s
+    def securitygroup(s)
+      @model.securitygroups << s
     end
 
     def tag(k, v)
       @model.tags[k] = v
+    end
+
+    def vpc_subnet_id(id)
+      @model[:'vpc-subnet-id'] = id
+    end
+
+    def vpc_securitygroup_id(id)
+      @model[:'vpc-securitygroups-ids'] << id
     end
 
     def validate_model

@@ -59,7 +59,7 @@ describe ::Dsl::Builders::BalancedTaskBuilder do
     it "should generate the correct model" do
       dsl_full_expected_model = ::Dsl::Model::DslBuildSet.new(
         '',
-        Nodes.new(CloudTools::Config.instances['xlarge'], 15, 3, [], {}),
+        Nodes.new(CloudTools::Config.instances['xlarge'], 15, 3, [], {}, nil, []),
         { :* => {:no_arch_all=>true, :modes=>[:binary_only]} }
       )
 

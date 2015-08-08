@@ -3,8 +3,6 @@ require 'cloud-tools/config'
 require 'cloud-tools/model'
 require 'cloud-tools/util/hash'
 
-require 'pry'
-
 module Dsl
 
   class BuildSetCooker

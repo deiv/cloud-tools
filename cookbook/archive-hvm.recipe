@@ -1,0 +1,30 @@
+
+build_set "archive-rebuild-new" do
+
+  balance_nodes do
+    mid_point 1600
+
+    upper_task do
+      nodes do
+        instance "xlarge-hvm"
+        count 15
+        slots 3
+      end
+
+      args do
+        mode :parallel
+      end
+    end
+
+    lower_task do
+      nodes do
+        instance "mlarge-hvm"
+        count 30
+        slots 6
+      end
+    end
+  end
+
+  task "normal" do
+  end
+end

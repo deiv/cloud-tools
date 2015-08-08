@@ -11,6 +11,11 @@ dsl_full = <<EOT
     slots 3
     tag "Tag1Name", "Tag1Value"
     tag "Tag2Name", "Tag2Value"
+    vpc_subnet_id "subnet-id123"
+    vpc_securitygroup_id "sg-1234567890"
+    vpc_securitygroup_id "sg-0987654321"
+    securitygroup "qwerty"
+    securitygroup "ytrewq"
   end
 
   task "test" do
@@ -36,6 +41,11 @@ dsl_full_balanced = <<EOT
         slots 3
         tag "Tag1Name", "Tag1Value"
         tag "Tag2Name", "Tag2Value"
+        vpc_subnet_id "subnet-id123"
+        vpc_securitygroup_id "sg-1234567890"
+        vpc_securitygroup_id "sg-0987654321"
+        securitygroup "qwerty"
+        securitygroup "ytrewq"
       end
 
       args do
@@ -147,8 +157,10 @@ describe ::Dsl::Builders::BuildSetBuilder do
           CloudTools::Config.instances['xlarge'],
           15,
           3,
-          [],
-          { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" }
+          ["qwerty", "ytrewq"],
+          { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value"},
+          "subnet-id123",
+          ["sg-1234567890", "sg-0987654321"]
         ),
         { "test"=>{:no_arch_all=>true, :modes=>[:binary_only]},
           "reference"=>{:no_arch_all=>true, :modes=>[:binary_only], :log_id=>"normal"} }
@@ -178,14 +190,16 @@ describe ::Dsl::Builders::BuildSetBuilder do
               CloudTools::Config.instances['xlarge'],
               15,
               3,
-              [],
-              { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" }
+              ["qwerty", "ytrewq"],
+              { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value"},
+              "subnet-id123",
+              ["sg-1234567890", "sg-0987654321"]
             ),
             {:* => {:modes=>[:parallel]}}
           ),
           ::Dsl::Model::DslBuildSet.new(
             "lowertask",
-            Nodes.new(CloudTools::Config.instances['medium'], 30, 6, [], {}),
+            Nodes.new(CloudTools::Config.instances['medium'], 30, 6, [], {}, nil, []),
             {}
           )
        ),

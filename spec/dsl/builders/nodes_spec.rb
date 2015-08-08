@@ -8,7 +8,8 @@ dsl_full = <<EOT
   instance "xlarge"
   count 15
   slots 3
-  securitygroups "sg1"
+  securitygroup "sg1"
+  securitygroup "sg2"
   tag "Tag1Name", "Tag1Value"
   tag "Tag2Name", "Tag2Value"
 EOT
@@ -17,7 +18,8 @@ dsl_bad = <<EOT
   instance "xlarge"
   cuunt 15
   slots 3
-  securitygroups "sg1"
+  securitygroup "sg1"
+  securitygroup "sg2"
 EOT
 
 describe ::Dsl::Builders::NodesBuilder do
@@ -38,8 +40,10 @@ describe ::Dsl::Builders::NodesBuilder do
         Instance.new("xlarge", "m2.xlarge", 0.5),
         15,
         3,
-        "sg1",
-        { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" }
+        ["sg1", "sg2"],
+        { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" },
+        nil,
+        []
       )
 
       @nodes_builder.eval_block { eval dsl_full }
@@ -56,6 +60,8 @@ describe ::Dsl::Builders::NodesBuilder do
       assert_equal nil, @nodes_builder.model.slots
       assert_equal [], @nodes_builder.model.securitygroups
       assert_equal Hash.new, @nodes_builder.model.tags
+      assert_equal nil, @nodes_builder.model[:'vpc-subnet-id']
+      assert_equal [], @nodes_builder.model[:'vpc-securitygroups-ids']
     end
   end
 

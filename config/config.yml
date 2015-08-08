@@ -10,16 +10,30 @@
     name: medium
     type: m1.medium
     price: .16
-    
+
+  # pvm
   - &mlarge !ruby/struct:Instance
     name: mlarge
     type: m1.large
     price: .32
 
+  # hvm
+  - &mlarge-hvm !ruby/struct:Instance
+    name: mlarge-hvm
+    type: m3.large
+    price: .126
+
+  # pvm
   - &xlarge !ruby/struct:Instance
     name: xlarge
     type: m2.xlarge
     price: .5
+
+  # hvm
+  - &xlarge-hvm !ruby/struct:Instance
+    name: xlarge-hvm
+    type: r3.2xlarge
+    price: .7
 
 #
 # Things like AMI's, ebs, snapshots... are region dependent
@@ -31,7 +45,8 @@
 
   - &sa-east !ruby/struct:Region
     name: us-west-2
-    ami: ami-6f47685f
+    #ami: ami-01575c31 # new account
+    ami: ami-6f47685f # old-account
     #ami-e6a832d6
 
 #
@@ -67,7 +82,9 @@
   :credentials: *qa
   :tags:
     Team: Debian-QA
-
 #  :securitygroups:
-#    - default
+#    - Debian-QA
 #    - no-network-access
+#  :vpc-subnet-id: subnet-f0b10995
+#  :vpc-securitygroups-ids:
+#    - sg-97b7f8f2

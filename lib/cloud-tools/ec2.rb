@@ -53,6 +53,8 @@ class Ec2
 
     options = create_spot_request_options(nodes)
 
+    log_info "request options: #{options}"
+
     # request instances
     response = @ec2.client.request_spot_instances(options)
 
@@ -95,15 +97,32 @@ class Ec2
 
   def create_spot_request_options(nodes)
 
-    security_groups = Config.defaults[:securitygroups] || []
-    security_groups += nodes[:'securitygroups'] if nodes[:'securitygroups']
-
     launch_specification = {
       :image_id => Config.defaults[:region].ami,
       :instance_type => nodes.instance.type
     }
 
-    launch_specification[:security_groups] = security_groups if security_groups.any?
+    # node level VPC has preference
+    subnet_id = Config.defaults[:'vpc-subnet-id']
+    subnet_id = nodes[:'vpc-subnet-id'] if nodes[:'vpc-subnet-id']
+
+    #
+    # If a VPC (subnet) is specified, AWS wants only the id's of vpc security groups.
+    # If not, use non-VPC security groups by name.
+    #
+    if subnet_id
+      security_groups_ids = Config.defaults[:'vpc-securitygroups-ids'] || []
+      security_groups_ids += nodes[:'vpc-securitygroups-ids'] if nodes['vpc-securitygroups-ids']
+
+      launch_specification[:security_group_ids] = security_groups_ids if security_groups_ids.any?
+      launch_specification[:subnet_id] = subnet_id if subnet_id
+
+    else
+      security_groups = Config.defaults[:securitygroups] || []
+      security_groups += nodes[:'securitygroups'] if nodes[:securitygroups]
+
+      launch_specification[:security_groups] = security_groups if security_groups.any?
+    end
 
     options = {
       :spot_price => nodes.instance.price.to_s,

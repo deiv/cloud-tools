@@ -131,12 +131,12 @@ describe ::Dsl::Builders::BalancedNodesBuilder do
         1600,
         ::Dsl::Model::DslBuildSet.new(
           "uppertask",
-          Nodes.new(CloudTools::Config.instances['xlarge'], 15, 3, [], {}),
+          Nodes.new(CloudTools::Config.instances['xlarge'], 15, 3, [], {}, nil, []),
           {:* => {:modes=>[:parallel]}}
         ),
         ::Dsl::Model::DslBuildSet.new(
           "lowertask",
-          Nodes.new(CloudTools::Config.instances['medium'], 30, 6, [], {}),
+          Nodes.new(CloudTools::Config.instances['medium'], 30, 6, [], {}, nil, []),
           {}
         )
       )
