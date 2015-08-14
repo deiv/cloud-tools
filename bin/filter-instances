@@ -24,12 +24,7 @@ options = OptionParser::new do |opts|
   opts.separator "Options:"
 
   opts.on("-t", "--type INSTANCE_TYPE", "Instance type") do |t|
-    if CloudTools::INSTANCE_TYPES.any? {|k, v| v == t}      
-      $type = t
-    else
-      puts "invalid instance type: #{t}"
-      exit 2
-    end
+    $type = t
   end
   
   opts.on("-w", "--write opt", "write info on stdout. Where opt: private-ip (def) | public-ip") do |t|

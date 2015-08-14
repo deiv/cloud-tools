@@ -5,8 +5,6 @@ require 'cloud-tools/config.rb'
 
 module CloudTools
 
-  INSTANCE_TYPES = { :medium => "m1.medium", :large => "m1.large", :xlarge => "m2.xlarge" }
-
   $config_dir = File.join(ENV['HOME'], ".cloud-tools")
 
   def self.puts_indented(text, level)

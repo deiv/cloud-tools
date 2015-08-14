@@ -43,13 +43,7 @@ options = OptionParser::new do |opts|
 
   opts.on("-t", "--type INSTANCE_TYPE", "Instance type") do |t|
     die_on_set_defined
-    
-    if CloudTools::INSTANCE_TYPES.any? {|k, v| v == t}      
-      $type = t
-    else
-      puts "invalid instance type: #{t}"
-      exit 2
-    end
+    $type = t
   end
   opts.on("-c", "--count COUNT", "Number of instances") do |c|
     die_on_set_defined
