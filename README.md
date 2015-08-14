@@ -9,82 +9,82 @@ It mostly contains a mix of a yaml configuration and a DSL that provides an easy
 
 This file is divided into the next sections:
 
-- #####:instances:
-Defines a list of instances, and their properties, each of one could be later referenced in the recipes. For example:
-```Ruby
+- #### :instances:
+  Defines a list of instances, and their properties, each of one could be later referenced in the recipes. For example:
+  ```Ruby
   - !ruby/struct:Instance
     name: medium
     type: m1.medium
     price: .16
-```
-##### Instance properties
-  - **name**: the name used to reference this instance in recipes
-  - **type**: the ec2 type of instance
-  - **price**: spot instance price
+  ```
+  ###### Instance properties
+    - **name**: the name used to reference this instance in recipes
+    - **type**: the ec2 type of instance
+    - **price**: spot instance price
 
 
-- ##### :regions:
-Defines the supported ec2 regions and their dependent properties. For example:
-```Ruby
-  - &sa-east !ruby/struct:Region
-    name: us-west-2
-    ami: ami-1235a576
-```
-##### Region properties
-  - **name**: the ec2 name of the region
-  - **ami**: ami used by instances in each region.
+- #### :regions:
+  Defines the supported ec2 regions and their dependent properties. For example:
+  ```Ruby
+    - &sa-east !ruby/struct:Region
+      name: us-west-2
+      ami: ami-1235a576
+  ```
+  ###### Region properties
+    - **name**: the ec2 name of the region
+    - **ami**: ami used by instances in each region.
 
 
-- ##### :credentials:
-A list of credentials, each one having the Amazon Api keys. Later you can specify the one used in **defaults** section.
-```Ruby
-  - &qa !ruby/struct:Credentials
-    name: qa
-    id: AKIAHJ934HUIHOPWKOPK
-    secret: o/UHudeihipHDUe897347389UDIiH
-```
-##### Credentials properties
-  - **name**: reference id (*not used atm, later we will allow to override this by commandline*).
-  - **id**: Amazon API Key ID
-  - **secret**: Amazon API Key Secret
+- #### :credentials:
+  A list of credentials, each one having the Amazon Api keys. Later you can specify the one used in **defaults** section.
+  ```Ruby
+    - &qa !ruby/struct:Credentials
+      name: qa
+      id: AKIAHJ934HUIHOPWKOPK
+      secret: o/UHudeihipHDUe897347389UDIiH
+  ```
+  ###### Credentials properties
+    - **name**: reference id (*not used atm, later we will allow to override this by commandline*).
+    - **id**: Amazon API Key ID
+    - **secret**: Amazon API Key Secret
 
 
-- ##### :masternode:
-Configuration related to masternode machine.
-```Ruby
-  :host: aws-logs.debian.net
-  :ssh-user: deiv
-  :work-dir: /home/deiv/cloud-scripts
-  :ruby-interpreter: ruby
-```
-##### Properties
-  - **host**: hostname/ip
-  - **ssh-user**: masternode user
-  - **work-dir**: cloud-scripts directory
-  - **ruby-interpreter**: ruby binary to use
+- #### :masternode:
+  Configuration related to masternode machine.
+  ```Ruby
+    :host: aws-logs.debian.net
+    :ssh-user: deiv
+    :work-dir: /home/deiv/cloud-scripts
+    :ruby-interpreter: ruby
+  ```
+  ###### Properties
+    - **host**: hostname/ip
+    - **ssh-user**: masternode user
+    - **work-dir**: cloud-scripts directory
+    - **ruby-interpreter**: ruby binary to use
 
 
-- ##### :defaults:
-Default properties to be used (*if not overriden by recipes or commandline*).
-```Ruby
-  :region: *sa-east
-  :credentials: *qa
-  :tags:
-    Team: Debian-QA
-  :securitygroups:
-    - Debian-QA
-    - no-network-access
-  :vpc-subnet-id: subnet-f0b10995
-  :vpc-securitygroups-ids:
-    - sg-97b7f8f2
-```
-##### Properties
-  - **region**: default region to be used
-  - **credentials**: default credentials
-  - **tags**: a hash with the tags added to each started Amazon resource (*this are mixed, not overriden, with each recipe resource tag level property; see instance TAG property*)
-  - **securitygroups**: name of the  security groups added to each started amazon resource  (if the instance did not belongs to a VPC, see security group property for more info)
-  - **vpc-subnet-id**: id of the VPC in with each instance will be started
-  - **vpc-securitygroups-ids**: ids of the security groups for each instance (if started in a VPC)
+- #### :defaults:
+  Default properties to be used (*if not overriden by recipes or commandline*).
+  ```Ruby
+    :region: *sa-east
+    :credentials: *qa
+    :tags:
+      Team: Debian-QA
+    :securitygroups:
+      - Debian-QA
+      - no-network-access
+    :vpc-subnet-id: subnet-f0b10995
+    :vpc-securitygroups-ids:
+      - sg-97b7f8f2
+  ```
+  ###### Properties
+    - **region**: default region to be used
+    - **credentials**: default credentials
+    - **tags**: a hash with the tags added to each started Amazon resource (*this are mixed, not overriden, with each recipe resource tag level property; see instance TAG property*)
+    - **securitygroups**: name of the  security groups added to each started amazon resource  (if the instance did not belongs to a VPC, see security group property for more info)
+    - **vpc-subnet-id**: id of the VPC in with each instance will be started
+    - **vpc-securitygroups-ids**: ids of the security groups for each instance (if started in a VPC)
 
 
 ### Recipes
