@@ -134,7 +134,7 @@ thread = []
 
 products.each do |p|
   thread << Thread::new(p) do |p|
-    launch_rebuild(p)
+    launch_rebuild(p, recipe.name)
   end
 end
 
