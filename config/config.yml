@@ -6,31 +6,31 @@
 # instances and tasks sections, are just placeholders. They are not used by the code.
 #
 :instances:
-  - &medium !ruby/struct:Instance
+  - !ruby/struct:Instance
     name: medium
     type: m1.medium
     price: .16
 
   # pvm
-  - &mlarge !ruby/struct:Instance
+  - !ruby/struct:Instance
     name: mlarge
     type: m1.large
     price: .32
 
   # hvm
-  - &mlarge-hvm !ruby/struct:Instance
+  - !ruby/struct:Instance
     name: mlarge-hvm
-    type: m3.large
-    price: .126
+    type: c3.large # m3.large => 2 ECU, 7.5 RAM
+    price: .105
 
   # pvm
-  - &xlarge !ruby/struct:Instance
+  - !ruby/struct:Instance
     name: xlarge
     type: m2.xlarge
     price: .5
 
   # hvm
-  - &xlarge-hvm !ruby/struct:Instance
+  - !ruby/struct:Instance
     name: xlarge-hvm
     type: r3.2xlarge
     price: .7

@@ -20,7 +20,7 @@ build_set "archive-rebuild" do
       nodes do
         instance "mlarge"
         count 30
-        slots 6
+        slots 3
       end
     end
   end
