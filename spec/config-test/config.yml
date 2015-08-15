@@ -28,14 +28,16 @@
     amis:
       ami-test-1: ami-test-1-us-east
       ami-test-2: ami-test-2-us-east
-    defaultami: ami-test-1
+      ami-test-default: ami-test-default-us-east
+    defaultami: ami-test-default
 
   - &sa-east !ruby/struct:Region
     name: us-west-2
     amis:
       ami-test-1: ami-test-1-sa-east
       ami-test-2: ami-test-2-sa-east
-    defaultami: ami-test-1
+      ami-test-default: ami-test-default-sa-east
+    defaultami: ami-test-default
 
 :credentials:
   - &test !ruby/struct:Credentials

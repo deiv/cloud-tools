@@ -43,10 +43,27 @@ describe ::Dsl::Builders::NodesBuilder do
         ["sg1", "sg2"],
         { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" },
         nil,
-        []
+        [],
+        nil
       )
 
       @nodes_builder.eval_block { eval dsl_full }
+      assert_equal dsl_full_expected_model, @nodes_builder.model
+    end
+
+    it "should generate the correct model with custom ami" do
+      dsl_full_expected_model = Nodes.new(
+        Instance.new("xlarge", "m2.xlarge", 0.5),
+        15,
+        3,
+        ["sg1", "sg2"],
+        { "Tag1Name" => "Tag1Value", "Tag2Name" => "Tag2Value" },
+        nil,
+        [],
+        "ami-node-spec"
+      )
+
+      @nodes_builder.eval_block { eval dsl_full + 'ami "ami-node-spec"' }
       assert_equal dsl_full_expected_model, @nodes_builder.model
     end
   end
