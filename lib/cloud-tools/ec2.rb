@@ -72,8 +72,7 @@ class Ec2
     instances = wait_for_instances(nodes.instance.type, requests, 15)
 
     begin
-      tags = Config.defaults[:tags] || {}
-      tags = tags.merge nodes[:tags] if nodes[:tags]
+      tags = get_nodes_tags(nodes)
 
       tags.each do |k, v|
         log_info "adding tag #{k}=#{v}"
@@ -93,6 +92,11 @@ class Ec2
     log_info "nodes of type #{nodes.instance.type} written to #{filename}"
 
     return instances
+  end
+
+  def get_nodes_tags(nodes)
+    tags = Config.defaults[:tags] || {}
+    tags = tags.merge nodes[:tags] if nodes[:tags]
   end
 
   def create_spot_request_options(nodes)
