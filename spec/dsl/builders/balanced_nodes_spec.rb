@@ -22,7 +22,7 @@ dsl_full = <<EOT
 
   lower_task do
     nodes do
-      instance "medium"
+      instance "mlarge"
       count 30
       slots 6
     end
@@ -60,7 +60,7 @@ dsl_lacks_midpoint = <<EOT
 
   lower_task do
     nodes do
-      instance "medium"
+      instance "mlarge"
       count 30
       slots 6
     end
@@ -100,7 +100,7 @@ dsl_bad = <<EOT
 
   lower_task do
     nodes do
-      instance "medium"
+      instance "mlarge"
       count 30
       slots 6
     end
@@ -136,7 +136,7 @@ describe ::Dsl::Builders::BalancedNodesBuilder do
         ),
         ::Dsl::Model::DslBuildSet.new(
           "lowertask",
-          Nodes.new(CloudTools::Config.instances['medium'], 30, 6, [], {}, nil, []),
+          Nodes.new(CloudTools::Config.instances['mlarge'], 30, 6, [], {}, nil, []),
           {}
         )
       )

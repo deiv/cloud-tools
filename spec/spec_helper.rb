@@ -12,4 +12,5 @@ require 'mocha/mini_test'
 
 require 'cloud-tools'
 
+$config_dir = File.join(File.dirname(__FILE__), "config-test")
 CloudTools::Config.load

@@ -1,0 +1,62 @@
+
+:instances:
+  - !ruby/struct:Instance
+    name: mlarge
+    type: m1.large
+    price: .32
+    ami: ami-test-1
+
+  - !ruby/struct:Instance
+    name: mlarge-hvm
+    type: c3.large
+    price: .105
+    ami: ami-test-2
+
+  - !ruby/struct:Instance
+    name: xlarge
+    type: m2.xlarge
+    price: .5
+
+  - !ruby/struct:Instance
+    name: xlarge-hvm
+    type: r3.2xlarge
+    price: .7
+
+:regions:
+  - &us-east !ruby/struct:Region
+    name: us-east-1
+    amis:
+      ami-test-1: ami-test-1-us-east
+      ami-test-2: ami-test-2-us-east
+    defaultami: ami-test-1
+
+  - &sa-east !ruby/struct:Region
+    name: us-west-2
+    amis:
+      ami-test-1: ami-test-1-sa-east
+      ami-test-2: ami-test-2-sa-east
+    defaultami: ami-test-1
+
+:credentials:
+  - &test !ruby/struct:Credentials
+    name: test
+    id: test
+    secret: test
+
+:masternode:
+  :host: test.net
+  :ssh-user: test
+  :work-dir: /home/test/cloud-scripts
+  :ruby-interpreter: ruby2.2
+
+:defaults:
+  :region: *sa-east
+  :credentials: *test
+  :tags:
+    Team: test
+  :securitygroups:
+    - test-sg
+    - no-network-access
+  :vpc-subnet-id: subnet-test
+  :vpc-securitygroups-ids:
+    - sg-45876738

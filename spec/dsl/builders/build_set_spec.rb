@@ -55,7 +55,7 @@ dsl_full_balanced = <<EOT
 
     lower_task do
       nodes do
-        instance "medium"
+        instance "mlarge"
         count 30
         slots 6
       end
@@ -112,7 +112,7 @@ dsl_rewrite = <<EOT
 
     upper_task do
       nodes do
-        instance "medium"
+        instance "xlarge"
         count 10
         slots 1
       end
@@ -199,7 +199,7 @@ describe ::Dsl::Builders::BuildSetBuilder do
           ),
           ::Dsl::Model::DslBuildSet.new(
             "lowertask",
-            Nodes.new(CloudTools::Config.instances['medium'], 30, 6, [], {}, nil, []),
+            Nodes.new(CloudTools::Config.instances['mlarge'], 30, 6, [], {}, nil, []),
             {}
           )
        ),
