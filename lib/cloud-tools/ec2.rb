@@ -97,8 +97,15 @@ class Ec2
 
   def create_spot_request_options(nodes)
 
+    ami = nodes.ami
+    ami = nodes.instance.ami if not ami
+    ami = Config.defaults[:region][:defaultami] if not ami
+    ami_id = Config.defaults[:region][:amis][ami]
+
+    raise "could not find any usable ami for (#{ami}), check you config" if not ami_id
+
     launch_specification = {
-      :image_id => Config.defaults[:region].ami,
+      :image_id => ami_id,
       :instance_type => nodes.instance.type
     }
 

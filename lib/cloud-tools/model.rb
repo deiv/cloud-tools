@@ -1,6 +1,6 @@
 
-Region      = Struct.new(:name, :ami)
-Instance    = Struct.new(:name, :type, :price)
-Nodes       = Struct.new(:instance, :count, :slots, :securitygroups, :tags, :'vpc-subnet-id', :'vpc-securitygroups-ids')
+Region      = Struct.new(:name, :amis, :defaultami)
+Instance    = Struct.new(:name, :type, :price, :ami)
+Nodes       = Struct.new(:instance, :count, :slots, :securitygroups, :tags, :'vpc-subnet-id', :'vpc-securitygroups-ids', :ami)
 BuildSet    = Struct.new(:name, :nodes, :tasks)
 Credentials = Struct.new(:name, :id, :secret)

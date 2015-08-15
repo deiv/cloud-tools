@@ -43,6 +43,10 @@ module Dsl; module Builders;
       @model[:'vpc-securitygroups-ids'] << id
     end
 
+    def ami(a)
+      @model.ami = a
+    end
+
     def validate_model
       validate_presence @model.instance,"should have an instance type"
       validate_presence @model.count, "should have a nodes count"

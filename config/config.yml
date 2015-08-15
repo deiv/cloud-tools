@@ -16,24 +16,28 @@
     name: mlarge
     type: m1.large
     price: .32
+    ami: cloud-node
 
   # hvm
   - !ruby/struct:Instance
     name: mlarge-hvm
     type: c3.large # m3.large => 2 ECU, 7.5 RAM
     price: .105
+    ami: cloud-node-new
 
   # pvm
   - !ruby/struct:Instance
     name: xlarge
     type: m2.xlarge
     price: .5
+    ami: cloud-node
 
   # hvm
   - !ruby/struct:Instance
     name: xlarge-hvm
     type: r3.2xlarge
     price: .7
+    ami: cloud-node-new
 
 #
 # Things like AMI's, ebs, snapshots... are region dependent
@@ -41,13 +45,17 @@
 :regions:
   - &us-east !ruby/struct:Region
     name: us-east-1
-    ami: ami-439df12a
+    amis:
+      cloud-node: ami-439df12a
+      cloud-node-new: ami-nonenone
+    defaultami: cloud-node
 
   - &sa-east !ruby/struct:Region
     name: us-west-2
-    #ami: ami-01575c31 # new account
-    ami: ami-6f47685f # old-account
-    #ami-e6a832d6
+    amis:
+      cloud-node: ami-6f47685f
+      cloud-node-new: ami-01575c31
+    defaultami: cloud-node
 
 #
 # We can have multiple credentials !

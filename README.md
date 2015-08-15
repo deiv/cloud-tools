@@ -16,11 +16,13 @@ This file is divided into the next sections:
     name: medium
     type: m1.medium
     price: .16
+    ami: cloud-node
   ```
   ###### Instance properties
     - **name**: the name used to reference this instance in recipes
     - **type**: the ec2 type of instance
     - **price**: spot instance price
+    - **ami**: ami to use for this instance. It's optional and can be overriden, see the *ami* property
 
 
 - #### :regions:
@@ -28,11 +30,15 @@ This file is divided into the next sections:
   ```Ruby
     - &sa-east !ruby/struct:Region
       name: us-west-2
-      ami: ami-1235a576
+      amis:
+        cloud-node: ami-nonenone1
+        cloud-node-new: ami-nonenone2
+      defaultami: cloud-node
   ```
   ###### Region properties
     - **name**: the ec2 name of the region
-    - **ami**: ami used by instances in each region.
+    - **amis**: lists of ami's for this region
+    - **defaultami**: the default ami to use for this region (*if not other ami property specified at other levels*)
 
 
 - #### :credentials:
@@ -134,6 +140,41 @@ If multiple levels are given, only one of this pair of rules are applied, depend
 - The values of all the properties are mixed.
 - Only the value that takes preference is used. The order of preference is (from lower to upper): *config level -> recipe level -> commandline level*
 
+#### Instance AMI [recipe, config#instance, config#regions]:
+
+- The ami should be listed in the *amis* hash property for each region, see *:regions:* section of config.yaml.
+- In config#regions this property is renamed as *defaultami*.
+
+**multiple level rule**: by preference
+
+Property levels:
+- recipe
+```ruby
+  nodes do
+    instance "xlarge-hvm"
+    ami "cloud-node"
+  end
+```
+
+- config#instance
+```ruby
+  - !ruby/struct:Instance
+    name: medium
+    type: m1.medium
+    price: .16
+    ami: cloud-node
+```
+
+- config#regions
+```ruby
+  - &sa-east !ruby/struct:Region
+    name: us-west-2
+    amis:
+      cloud-node: ami-nonenone1
+      cloud-node-new: ami-nonenone2
+    defaultami: cloud-node
+```
+
 #### Instance TAG [recipe, config#defaults]:
 
 **multiple level rule**: by mixing
@@ -222,4 +263,3 @@ end
 ## TODO:
 
   - Tests on new account
-  - Change ami property of regions section in config to be a hash that specifies a key/value pair with an ami-name/ami-id- Later the ami-name could be referenced in a new instance property.
